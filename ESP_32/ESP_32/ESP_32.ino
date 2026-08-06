@@ -36,7 +36,7 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_UXGA;
+  config.frame_size = FRAMESIZE_UXGA;//doesnt affect actual stream res until pixformat is set to JPEG.
   config.pixel_format = PIXFORMAT_YUV422;  // for streaming
   //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
@@ -84,7 +84,7 @@ void setup() {
     s->set_saturation(s, -2);  // lower the saturation
   }
   // drop down frame size for higher initial frame rate
-  if (config.pixel_format == PIXFORMAT_JPEG) {
+  if (config.pixel_format == PIXFORMAT_JPEG) {  //doesnt affect actual stream res until pixformat is set to JPEG.
     s->set_framesize(s, FRAMESIZE_QVGA);
   }
 
@@ -99,7 +99,7 @@ void setup() {
 
 // Setup LED FLash if LED pin is defined in camera_pins.h
 #if defined(LED_GPIO_NUM)
-  setupLedFlash();
+  setupLedFlash();  //Holy bright LED Batman!
 #endif
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -115,12 +115,12 @@ void setup() {
 
   startCameraServer();
 
-  Serial.print("Camera Ready! Use 'http://");
+  Serial.print("Camera Ready! Use 'http://"); // get the IP address of the ESP32-CAM and enter it in a browser to connect to the camera stream. or use it in Face Vision
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
 }
 
 void loop() {
   // Do nothing. Everything is done in another task by the web server
-  delay(10000);
+  delay(10000); //bro be slacking off
 }
