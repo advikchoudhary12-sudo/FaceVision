@@ -1,3 +1,7 @@
+param(
+    [string]$PythonCommand = "python"
+)
+
 $ErrorActionPreference = "Stop"
 
 $appDirectory = Join-Path $PSScriptRoot "FaceVision"
@@ -7,7 +11,7 @@ if (-not (Test-Path -LiteralPath $appDirectory)) {
 
 Push-Location $appDirectory
 try {
-    python launcher.py
+    & $PythonCommand launcher.py
 }
 finally {
     Pop-Location

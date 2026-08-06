@@ -42,9 +42,9 @@ FaceVision is a local, real-time face-recognition system with GPU-first InsightF
 
 Download [Install-FaceVision.ps1](Install-FaceVision.ps1), then run it in
 PowerShell. It downloads the public project archive, installs it at
-`%LOCALAPPDATA%\FaceVision`, creates private local settings, installs the
-dependencies, and starts the launcher. Python 3.12 or newer must be installed
-and available as `python` first.
+`%LOCALAPPDATA%\FaceVision`, creates private local settings, installs Python
+3.12 with `winget` if necessary, detects CPU/NVIDIA GPU hardware, installs the
+appropriate ONNX Runtime and CUDA/cuDNN runtime DLLs, then starts the launcher.
 
 ```powershell
 .\Install-FaceVision.ps1

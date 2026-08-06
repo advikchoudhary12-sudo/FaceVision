@@ -1,14 +1,49 @@
 param(
-    [string]$PythonCommand = "python"
+    [string]$PythonCommand = "python",
+    [switch]$ForceCpu
 )
 
 $ErrorActionPreference = "Stop"
 
-# InsightFace declares the CPU package as a dependency, while the GPU and CPU
-# ONNX Runtime wheels install the same Python module. Install InsightFace first,
-# then install the GPU wheel last so it owns that module.
-& $PythonCommand -m pip install --upgrade insightface numpy opencv-python customtkinter
-& $PythonCommand -m pip uninstall -y onnxruntime onnxruntime-gpu
-& $PythonCommand -m pip install --timeout 1200 --retries 5 "onnxruntime-gpu[cuda,cudnn]==1.28.0"
+function Invoke-Python {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
+    & $PythonCommand @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python command failed: $PythonCommand $($Arguments -join ' ')"
+    }
+}
 
-& $PythonCommand -c "import onnxruntime as ort; ort.preload_dlls(); assert 'CUDAExecutionProvider' in ort.get_available_providers(); print('CUDAExecutionProvider is ready.')"
+$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name
+$gpuNames = @(Get-CimInstance Win32_VideoController | ForEach-Object Name)
+Write-Host "CPU: $cpu"
+Write-Host "GPU: $($gpuNames -join '; ')"
+
+# A working NVIDIA driver reports the highest CUDA version it supports. The
+# selected ONNX Runtime wheel then downloads matching CUDA/cuDNN DLLs through
+# pip; a separate CUDA Toolkit installation is not needed.
+$cudaVersion = $null
+$nvidiaSmi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
+if (-not $ForceCpu -and $null -ne $nvidiaSmi) {
+    $smiOutput = & $nvidiaSmi.Source 2>$null | Out-String
+    if ($LASTEXITCODE -eq 0 -and $smiOutput -match 'CUDA Version\s*:\s*(\d+)\.(\d+)') {
+        $cudaVersion = [version]"$($Matches[1]).$($Matches[2])"
+    }
+}
+
+Invoke-Python -Arguments @('-m', 'pip', 'install', '--upgrade', 'insightface', 'numpy', 'opencv-python', 'customtkinter')
+Invoke-Python -Arguments @('-m', 'pip', 'uninstall', '-y', 'onnxruntime', 'onnxruntime-gpu')
+
+if ($null -ne $cudaVersion -and $cudaVersion.Major -ge 13) {
+    Write-Host "NVIDIA CUDA $cudaVersion detected. Installing CUDA 13 ONNX Runtime."
+    Invoke-Python -Arguments @('-m', 'pip', 'install', '--timeout', '1200', '--retries', '5', 'onnxruntime-gpu[cuda,cudnn]>=1.27')
+    Invoke-Python -Arguments @('-c', "import onnxruntime as ort; ort.preload_dlls(); print('ONNX Runtime providers:', ort.get_available_providers())")
+}
+elseif ($null -ne $cudaVersion -and $cudaVersion.Major -eq 12) {
+    Write-Host "NVIDIA CUDA $cudaVersion detected. Installing CUDA 12 ONNX Runtime."
+    Invoke-Python -Arguments @('-m', 'pip', 'install', '--timeout', '1200', '--retries', '5', 'onnxruntime-gpu[cuda,cudnn]==1.26.2')
+    Invoke-Python -Arguments @('-c', "import onnxruntime as ort; ort.preload_dlls(); print('ONNX Runtime providers:', ort.get_available_providers())")
+}
+else {
+    Write-Host "No supported NVIDIA CUDA driver detected. Installing CPU ONNX Runtime."
+    Invoke-Python -Arguments @('-m', 'pip', 'install', '--upgrade', 'onnxruntime')
+}
