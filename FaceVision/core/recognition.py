@@ -10,7 +10,8 @@ from config import (
     DET_SIZE,
     CTX_ID,
     THRESHOLD,
-    KNOWN_FACES_PATH
+    KNOWN_FACES_PATH,
+    PROCESS_EVERY_N_FRAMES
 )
 
 

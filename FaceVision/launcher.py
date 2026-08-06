@@ -16,7 +16,7 @@ def run_launcher():
 
     app = ctk.CTk()
     app.title(LAUNCHER_TITLE)
-    app.geometry("620x430")
+    app.geometry("620x520")
     app.resizable(False, False)
 
     # ----------------------------
@@ -121,7 +121,7 @@ def run_launcher():
         font=("Segoe UI", 12),
         text_color="gray70",
     )
-    status_label.pack(pady=(-17, 12))
+    status_label.pack(pady=(17, 12))
 
     # ----------------------------
     # Start Button
@@ -154,8 +154,8 @@ def run_launcher():
     start_button = ctk.CTkButton(
         app,
         text="START",
-        width=170,
-        height=40,
+        width=200,
+        height=80,
         command=start
     )
 
