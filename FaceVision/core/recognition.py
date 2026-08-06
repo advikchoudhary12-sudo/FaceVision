@@ -11,7 +11,6 @@ from config import (
     CTX_ID,
     THRESHOLD,
     KNOWN_FACES_PATH,
-    PROCESS_EVERY_N_FRAMES
 )
 
 
