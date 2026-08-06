@@ -38,6 +38,22 @@ FaceVision is a local, real-time face-recognition system with GPU-first InsightF
 
 4. Select a preset or type a camera index, HTTP/RTSP stream URL, or video path.
 
+## Install on another Windows computer
+
+Download [Install-FaceVision.ps1](Install-FaceVision.ps1), then run it in
+PowerShell. It downloads the public project archive, installs it at
+`%LOCALAPPDATA%\FaceVision`, creates private local settings, installs the
+dependencies, and starts the launcher. Python 3.12 or newer must be installed
+and available as `python` first.
+
+```powershell
+.\Install-FaceVision.ps1
+```
+
+Later, run `%LOCALAPPDATA%\FaceVision\Start-FaceVision.ps1` to launch it from
+any folder. The installer preserves an existing `local_settings.py` file, so
+your ESP32 address and Blynk token are not replaced by updates.
+
 ## Privacy and security
 
 Never commit `FaceVision/local_settings.py` or `ESP_32/ESP_32/wifi_secrets.h`. The included example files are safe templates. Enrolled face images are ignored because they are personal biometric data.
