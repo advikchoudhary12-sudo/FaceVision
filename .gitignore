@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Models (optional)
+*.engine
+
+# Environment
+.env
+
+# Local network and ESP32 credentials
+ESP_32/ESP_32/wifi_secrets.h
+FaceVision/.env
+FaceVision/local_settings.py
+
+# Private face-recognition training images
+FaceVision/data/known_faces/
+
+# Obsolete starter files retained locally but not part of the current project
+/config.py
+/recognize.txt
+/core/
+
+# Python cache
+.pytest_cache/
+
+# OS
+.DS_Store
