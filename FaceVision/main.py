@@ -32,6 +32,7 @@ def main():
     # -------------------------
     camera = None
     blynk = None
+    last_blynk_status = None
     try:
         camera_source = run_launcher()
         if camera_source is None:
@@ -55,6 +56,11 @@ def main():
         blynk = BlynkClient(BLYNK_AUTH_TOKEN)
         if blynk.enabled:
             blynk.update({BLYNK_STATUS_PIN: 1, BLYNK_FPS_PIN: 0})
+            # Initialize last_blynk_status without printing during startup
+            try:
+                last_blynk_status = 1
+            except Exception:
+                pass
             print("[INFO] Blynk integration enabled.")
         else:
             print("[INFO] Blynk disabled: set BLYNK_AUTH_TOKEN in local_settings.py to enable it.")
@@ -89,10 +95,23 @@ def main():
             fps.update()
             now = monotonic()
             if now - last_blynk_update >= BLYNK_UPDATE_INTERVAL_SECONDS:
-                blynk.update({
+                payload = {
                     BLYNK_STATUS_PIN: int(alert_sent),
                     BLYNK_FPS_PIN: round(fps.get_fps(), 1),
-                })
+                }
+                blynk.update(payload)
+                # Terminal output for unknown-detected status toggles
+                try:
+                    if BLYNK_STATUS_PIN in payload:
+                        new_status = int(payload[BLYNK_STATUS_PIN])
+                        if new_status != last_blynk_status:
+                            if new_status == 1:
+                                print("Sending alert")
+                            else:
+                                print("Alert cleared")
+                            last_blynk_status = new_status
+                except Exception:
+                    pass
                 last_blynk_update = now
             overlay.draw(frame, results, fps.get_fps() if SHOW_FPS else None)
             display = cv2.resize(
@@ -110,6 +129,17 @@ def main():
         if camera is not None:
             camera.release()
         if blynk is not None:
+            # Ensure terminal shows alert cleared when status set to 0 on exit
+            try:
+                new_status = 0
+                if new_status != last_blynk_status:
+                    if new_status == 1:
+                        print("Sending alert")
+                    else:
+                        print("Alert cleared")
+                    last_blynk_status = new_status
+            except Exception:
+                pass
             blynk.update({BLYNK_STATUS_PIN: 0})
             blynk.close()
         cv2.destroyAllWindows()
