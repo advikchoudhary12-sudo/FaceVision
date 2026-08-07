@@ -35,15 +35,16 @@ Invoke-Python -Arguments @('-m', 'pip', 'uninstall', '-y', 'onnxruntime', 'onnxr
 
 if ($null -ne $cudaVersion -and $cudaVersion.Major -ge 13) {
     Write-Host "NVIDIA CUDA $cudaVersion detected. Installing CUDA 13 ONNX Runtime."
-    Invoke-Python -Arguments @('-m', 'pip', 'install', '--timeout', '1200', '--retries', '5', 'onnxruntime-gpu[cuda,cudnn]>=1.27')
+    Invoke-Python -Arguments @('-m', 'pip', 'install', '--timeout', '1200', '--retries', '5', 'onnxruntime-gpu[cuda,cudnn]>=1.28')
     Invoke-Python -Arguments @('-c', "import onnxruntime as ort; ort.preload_dlls(); print('ONNX Runtime providers:', ort.get_available_providers())")
 }
 elseif ($null -ne $cudaVersion -and $cudaVersion.Major -eq 12) {
     Write-Host "NVIDIA CUDA $cudaVersion detected. Installing CUDA 12 ONNX Runtime."
-    Invoke-Python -Arguments @('-m', 'pip', 'install', '--timeout', '1200', '--retries', '5', 'onnxruntime-gpu[cuda,cudnn]==1.26.2')
+    Invoke-Python -Arguments @('-m', 'pip', 'install', '--timeout', '1200', '--retries', '5', 'onnxruntime-gpu[cuda,cudnn]==1.28')
     Invoke-Python -Arguments @('-c', "import onnxruntime as ort; ort.preload_dlls(); print('ONNX Runtime providers:', ort.get_available_providers())")
 }
 else {
     Write-Host "No supported NVIDIA CUDA driver detected. Installing CPU ONNX Runtime."
     Invoke-Python -Arguments @('-m', 'pip', 'install', '--upgrade', 'onnxruntime')
 }
+
