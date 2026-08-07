@@ -18,22 +18,66 @@ function Get-PythonCommand {
     }
 
     $winget = Get-Command winget -ErrorAction SilentlyContinue
-    if ($null -eq $winget) {
-        throw "Python was not found and winget is unavailable. Install Python 3.12 or newer, add it to PATH, then run this installer again."
+    if ($null -ne $winget) {
+        Write-Host "Installing Python 3.12 via winget..."
+        & $winget.Source install --exact --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
+        if ($LASTEXITCODE -eq 0) {
+            $pythonPath = Get-ChildItem -Path (Join-Path $env:LOCALAPPDATA "Programs\Python") -Filter python.exe -Recurse -ErrorAction SilentlyContinue |
+                Sort-Object FullName -Descending |
+                Select-Object -First 1 -ExpandProperty FullName
+            if ($pythonPath) { return $pythonPath }
+            Write-Host "Python installed but not found in expected location; trying to find in PATH..."
+            $python = Get-Command python -ErrorAction SilentlyContinue
+            if ($null -ne $python) { return $python.Source }
+        }
+        Write-Host "winget install failed or did not produce a usable python; falling back to embeddable distribution..."
+    }
+    else {
+        Write-Host "winget not available; attempting embeddable Python fallback..."
     }
 
-    Write-Host "Installing Python 3.12..."
-    & $winget.Source install --exact --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
+    # Attempt to download and use the embeddable Python distribution (works without admin rights)
+    $is64 = [Environment]::Is64BitOperatingSystem
+    $version = "3.12.0"
+    if ($is64) { $embedFileName = "python-$version-embed-amd64.zip" } else { $embedFileName = "python-$version-embed-win32.zip" }
+    $embedUrl = "https://www.python.org/ftp/python/$version/$embedFileName"
+    $embedArchive = Join-Path $temporaryDirectory $embedFileName
+
+    Write-Host "Downloading embeddable Python from $embedUrl..."
+    try {
+        Invoke-WebRequest -Uri $embedUrl -OutFile $embedArchive -UseBasicParsing
+    } catch {
+        throw "Failed to download embeddable Python from $embedUrl. Install Python 3.12 manually and rerun the installer."
+    }
+
+    $embedExtract = Join-Path $temporaryDirectory "python-embed"
+    Expand-Archive -LiteralPath $embedArchive -DestinationPath $embedExtract -Force
+
+    $pythonPath = Join-Path $embedExtract "python.exe"
+    if (-not (Test-Path $pythonPath)) {
+        $pythonFound = Get-ChildItem -Path $embedExtract -Filter python.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+        if ($pythonFound) { $pythonPath = $pythonFound }
+    }
+    if (-not (Test-Path $pythonPath)) { throw "Failed to extract embeddable Python. Install Python 3.12 manually and rerun the installer." }
+
+    # Ensure pip is available for setup scripts that expect pip to exist
+    & $pythonPath -m pip --version *> $null 2>&1
     if ($LASTEXITCODE -ne 0) {
-        throw "Python installation failed. Install Python 3.12 manually, add it to PATH, then run this installer again."
+        Write-Host "Bootstrapping pip for embeddable Python..."
+        & $pythonPath -m ensurepip --default-pip *> $null 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            $getpipUrl = "https://bootstrap.pypa.io/get-pip.py"
+            $getpipPath = Join-Path $temporaryDirectory "get-pip.py"
+            try {
+                Invoke-WebRequest -Uri $getpipUrl -OutFile $getpipPath -UseBasicParsing
+                & $pythonPath $getpipPath
+            } catch {
+                throw "Failed to install pip for embeddable Python. Install Python 3.12 manually and rerun the installer."
+            }
+        }
+        & $pythonPath -m pip install --upgrade pip
     }
 
-    $pythonPath = Get-ChildItem -Path (Join-Path $env:LOCALAPPDATA "Programs\Python") -Filter python.exe -Recurse -ErrorAction SilentlyContinue |
-        Sort-Object FullName -Descending |
-        Select-Object -First 1 -ExpandProperty FullName
-    if (-not $pythonPath) {
-        throw "Python was installed but could not be located. Restart PowerShell and run this installer again."
-    }
     return $pythonPath
 }
 
