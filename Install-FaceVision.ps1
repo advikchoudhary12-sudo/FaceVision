@@ -80,7 +80,8 @@ function Ensure-Python312 {
     } catch {
         Write-Log "Embeddable Python fallback failed: $($_.Exception.Message)"
     }
-n    throw "Unable to obtain Python 3.12. Install it manually and rerun."
+
+n    throw "Unable to obtain Python 3.12. Install it manually and rerun."
 }
 
 try {
@@ -108,6 +109,10 @@ try {
 
     New-Item -ItemType Directory -Path $InstallPath -Force | Out-Null
     Copy-Item -Path (Join-Path $sourceDirectory.FullName "*") -Destination $InstallPath -Recurse -Force
+
+    # Ensure data and known_faces directories exist to avoid runtime errors
+    $knownFacesPath = Join-Path $InstallPath "data\known_faces"
+    New-Item -ItemType Directory -Path $knownFacesPath -Force | Out-Null
 
     $settingsPath = Join-Path $InstallPath "FaceVision\local_settings.py"
     $settingsExamplePath = Join-Path $InstallPath "FaceVision\local_settings.example.py"
