@@ -18,7 +18,7 @@ function Write-Log {
     Write-Host $Message
 }
 
-function Ensure-Python312 {
+function Get-Python312 {
     # Return path to a usable Python 3.12 executable. Will attempt multiple fallbacks.
     $candidates = @('python','python3','py')
     foreach ($c in $candidates) {
@@ -86,7 +86,7 @@ n    throw "Unable to obtain Python 3.12. Install it manually and rerun."
 
 try {
     Write-Log "Starting FaceVision installer"
-    $pythonCommand = Ensure-Python312
+    $pythonCommand = Get-Python312
     Write-Log "Using Python: $pythonCommand"
 
     New-Item -ItemType Directory -Path $temporaryDirectory -Force | Out-Null
