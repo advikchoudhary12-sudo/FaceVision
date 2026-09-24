@@ -1,3 +1,15 @@
+"""FaceVision's camera-source launcher.
+
+The explicit script-directory entry lets this file run from any working folder.
+"""
+
+from pathlib import Path
+import sys
+
+APP_DIRECTORY = Path(__file__).resolve().parent
+if str(APP_DIRECTORY) not in sys.path:
+    sys.path.insert(0, str(APP_DIRECTORY))
+
 import customtkinter as ctk
 
 from config import (

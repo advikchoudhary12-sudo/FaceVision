@@ -15,6 +15,13 @@ from config import (
     BLYNK_UNKNOWN_EVENT,
     BLYNK_UPDATE_INTERVAL_SECONDS,
     UNKNOWN_DETECTIONS_REQUIRED,
+    REMOTE_VIEWER_ENABLED,
+    REMOTE_VIEWER_HOST,
+    REMOTE_VIEWER_PORT,
+    REMOTE_VIEWER_MAX_WIDTH,
+    REMOTE_VIEWER_JPEG_QUALITY,
+    REMOTE_VIEWER_MAX_FPS,
+    CAPTURE_STILL_ENABLED,
 )
 
 from core.camera import Camera
@@ -22,6 +29,7 @@ from core.recognition import Recognition
 from core.overlay import Overlay
 from core.fps import FPSCounter
 from core.blynk import BlynkClient
+from core.remote_viewer import RemoteViewer
 from launcher import run_launcher
 
 
@@ -32,6 +40,7 @@ def main():
     # -------------------------
     camera = None
     blynk = None
+    remote_viewer = None
     last_blynk_status = None
     try:
         camera_source = run_launcher()
@@ -64,6 +73,22 @@ def main():
             print("[INFO] Blynk integration enabled.")
         else:
             print("[INFO] Blynk disabled: set BLYNK_AUTH_TOKEN in local_settings.py to enable it.")
+
+        if REMOTE_VIEWER_ENABLED:
+            try:
+                remote_viewer = RemoteViewer(
+                    host=REMOTE_VIEWER_HOST,
+                    port=REMOTE_VIEWER_PORT,
+                    max_width=REMOTE_VIEWER_MAX_WIDTH,
+                    quality=REMOTE_VIEWER_JPEG_QUALITY,
+                    max_fps=REMOTE_VIEWER_MAX_FPS,
+                    capture_enabled=CAPTURE_STILL_ENABLED,
+                )
+                bound_port = remote_viewer.start()
+                print(f"[INFO] Remote viewer ready at http://<PC-IP>:{bound_port}/ (Tailscale: use this PC's Tailscale IP).")
+            except OSError as error:
+                remote_viewer = None
+                print(f"[WARNING] Remote viewer unavailable; FaceVision will continue locally: {error}")
 
         print("[INFO] FaceVision started. Press Q to quit.")
 
@@ -114,6 +139,8 @@ def main():
                     pass
                 last_blynk_update = now
             overlay.draw(frame, results, fps.get_fps() if SHOW_FPS else None)
+            if remote_viewer is not None:
+                remote_viewer.publish(frame, now)
             display = cv2.resize(
                 frame,
                 None,
@@ -142,6 +169,8 @@ def main():
                 pass
             blynk.update({BLYNK_STATUS_PIN: 0})
             blynk.close()
+        if remote_viewer is not None:
+            remote_viewer.stop()
         cv2.destroyAllWindows()
 
     print("[INFO] FaceVision stopped.")

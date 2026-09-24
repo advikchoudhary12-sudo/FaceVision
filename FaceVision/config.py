@@ -12,10 +12,16 @@ FRAME_HEIGHT = 480
 import os
 
 try:
-    from local_settings import BLYNK_AUTH_TOKEN, ESP32_STREAM_URL
-except ImportError:
-    BLYNK_AUTH_TOKEN = os.getenv("BLYNK_AUTH_TOKEN", "")
-    ESP32_STREAM_URL = os.getenv("FACEVISION_ESP32_STREAM_URL", "")
+    import local_settings as _local_settings
+except ModuleNotFoundError:
+    _local_settings = None
+except Exception as error:
+    raise RuntimeError(
+        "FaceVision could not read local_settings.py. Fix its Python syntax or restore it from local_settings.example.py."
+    ) from error
+
+BLYNK_AUTH_TOKEN = getattr(_local_settings, "BLYNK_AUTH_TOKEN", os.getenv("BLYNK_AUTH_TOKEN", ""))
+ESP32_STREAM_URL = getattr(_local_settings, "ESP32_STREAM_URL", os.getenv("FACEVISION_ESP32_STREAM_URL", ""))
 
 CAMERA_PRESETS = {
     "ESP32-CAM": ESP32_STREAM_URL,
@@ -41,6 +47,8 @@ DET_SIZE = (320, 320)
 
 # Recognition
 THRESHOLD = 0.55
+SHARPENING_ENABLED = True
+SHARPENING_AMOUNT = 0.35
 
 # Performance
 PROCESS_EVERY_N_FRAMES = 4
@@ -55,3 +63,14 @@ KNOWN_FACES_PATH = BASE_DIR / "data" / "known_faces"
 WINDOW_NAME = "FaceVision"
 SHOW_FPS = True
 DISPLAY_SCALE = 2.0
+
+# Remote viewer. It serves only the finished, annotated OpenCV frame—not the
+# ESP32 camera feed or a second recognition pipeline. Use Tailscale to reach
+# http://<this-PC's-Tailscale-IP>:8080 from the phone on any network.
+REMOTE_VIEWER_ENABLED = getattr(_local_settings, "REMOTE_VIEWER_ENABLED", True)
+REMOTE_VIEWER_HOST = getattr(_local_settings, "REMOTE_VIEWER_HOST", "0.0.0.0")
+REMOTE_VIEWER_PORT = getattr(_local_settings, "REMOTE_VIEWER_PORT", 8080)
+REMOTE_VIEWER_MAX_WIDTH = getattr(_local_settings, "REMOTE_VIEWER_MAX_WIDTH", 800)
+REMOTE_VIEWER_JPEG_QUALITY = getattr(_local_settings, "REMOTE_VIEWER_JPEG_QUALITY", 80)
+REMOTE_VIEWER_MAX_FPS = getattr(_local_settings, "REMOTE_VIEWER_MAX_FPS", 12)
+CAPTURE_STILL_ENABLED = getattr(_local_settings, "CAPTURE_STILL_ENABLED", True)

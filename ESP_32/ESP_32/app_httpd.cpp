@@ -154,6 +154,10 @@ static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_
   return len;
 }
 
+// Lower values produce higher quality in frame2jpg. 30 is a better
+// performance/detail balance for real-time face detection.
+#define STREAM_SOFTWARE_JPEG_QUALITY 45
+
 static esp_err_t capture_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
   esp_err_t res = ESP_OK;
@@ -195,7 +199,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
     res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
   } else {
     jpg_chunking_t jchunk = {req, 0};
-    res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk) ? ESP_OK : ESP_FAIL;
+    res = frame2jpg_cb(fb, STREAM_SOFTWARE_JPEG_QUALITY, jpg_encode_stream, &jchunk) ? ESP_OK : ESP_FAIL;
     httpd_resp_send_chunk(req, NULL, 0);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     fb_len = jchunk.len;
@@ -215,7 +219,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   esp_err_t res = ESP_OK;
   size_t _jpg_buf_len = 0;
   uint8_t *_jpg_buf = NULL;
-  char *part_buf[128];
+  char part_buf[128];
 
   static int64_t last_frame = 0;
   if (!last_frame) {
@@ -244,7 +248,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
       _timestamp.tv_sec = fb->timestamp.tv_sec;
       _timestamp.tv_usec = fb->timestamp.tv_usec;
       if (fb->format != PIXFORMAT_JPEG) {
-        bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+        bool jpeg_converted = frame2jpg(fb, STREAM_SOFTWARE_JPEG_QUALITY, &_jpg_buf, &_jpg_buf_len);
         esp_camera_fb_return(fb);
         fb = NULL;
         if (!jpeg_converted) {
@@ -287,10 +291,16 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
 #endif
-    log_i(
-      "MJPG: %" PRIu32 "B %" PRId32 "ms (%.1ffps), AVG: %" PRIu32 "ms (%.1ffps)", (uint32_t)_jpg_buf_len, (int32_t)frame_time, 1000.0 / frame_time,
-      avg_frame_time, 1000.0 / avg_frame_time
-    );
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+    static uint32_t frame_log_counter = 0;
+    if (++frame_log_counter % 30 == 0) {
+      log_i(
+        "MJPG: %" PRIu32 "B %" PRId32 "ms (%.1ffps), AVG: %" PRIu32 "ms (%.1ffps)",
+        (uint32_t)_jpg_buf_len, (int32_t)frame_time, 1000.0 / frame_time,
+        avg_frame_time, 1000.0 / avg_frame_time
+      );
+    }
+#endif
   }
 
 #if defined(LED_GPIO_NUM)

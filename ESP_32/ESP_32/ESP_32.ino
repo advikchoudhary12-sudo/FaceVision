@@ -36,33 +36,15 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_UXGA;//doesnt affect actual stream res until pixformat is set to JPEG.
-  config.pixel_format = PIXFORMAT_YUV422;  // for streaming
-  //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
-  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  // This camera has no native JPEG path. Keep the source uncompressed so the
+  // software encoder receives full pixel detail, using PSRAM for larger frames.
+  config.frame_size = FRAMESIZE_VGA;
+  config.pixel_format = PIXFORMAT_GRAYSCALE;  // software JPEG conversion in app_httpd.cpp
+  // Always discard stale frames when the network/encoder falls behind.
+  config.grab_mode = CAMERA_GRAB_LATEST;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
-  config.fb_count = 3;
-
-  // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
-  //                      for larger pre-allocated frame buffer.
-  if (config.pixel_format == PIXFORMAT_JPEG) {
-    if (psramFound()) {
-      config.jpeg_quality = 10;
-      config.fb_count = 2;
-      config.grab_mode = CAMERA_GRAB_LATEST;
-    } else {
-      // Limit the frame size when PSRAM is not available
-      config.frame_size = FRAMESIZE_QVGA;
-      config.fb_location = CAMERA_GRAB_LATEST;
-    }
-  } else {
-    // Best option for face detection/recognition
-    config.frame_size = FRAMESIZE_QVGA;
-#if CONFIG_IDF_TARGET_ESP32S3
-    config.fb_count = 3;
-#endif
-  }
+  // Two buffers keep the stream responsive without queueing stale frames.
+  config.fb_count = psramFound() ? 2 : 1;
 
 #if defined(CAMERA_MODEL_ESP_EYE)
   pinMode(13, INPUT_PULLUP);

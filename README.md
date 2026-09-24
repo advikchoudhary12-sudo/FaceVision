@@ -54,6 +54,27 @@ Later, run `%LOCALAPPDATA%\FaceVision\Start-FaceVision.ps1` to launch it from
 any folder. The installer preserves an existing `local_settings.py` file, so
 your ESP32 address and Blynk token are not replaced by updates.
 
+If installation or GPU acceleration fails, run `%LOCALAPPDATA%\FaceVision\verify_install.py`
+with Python. It explains common NVIDIA driver, CUDA, cuDNN, cuBLAS, package,
+and network errors. See [the troubleshooting guide](docs/TROUBLESHOOTING.md).
+
+The launcher and GPU scripts can be run from any PowerShell folder. Add `-Check`
+to validate them without opening a camera window or changing packages.
+
+## Full project smoke test
+
+From any PowerShell folder, run:
+
+```powershell
+& "C:\path\to\FaceVision\Test-FaceVision.ps1"
+```
+
+It validates project files, PowerShell entry points, Python imports, CUDA/cuDNN/
+cuBLAS runtime availability, and the final-frame phone-stream server. It does
+not open a camera, contact Blynk, expose credentials, or alter packages. ESP32
+compilation needs Arduino CLI and the private `wifi_secrets.h` file, so it is
+reported separately rather than treated as a desktop-project failure.
+
 ## Privacy and security
 
 Never commit `FaceVision/local_settings.py` or `ESP_32/ESP_32/wifi_secrets.h`. The included example files are safe templates. Enrolled face images are ignored because they are personal biometric data.

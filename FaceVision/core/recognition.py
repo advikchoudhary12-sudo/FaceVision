@@ -11,6 +11,8 @@ from config import (
     CTX_ID,
     THRESHOLD,
     KNOWN_FACES_PATH,
+    SHARPENING_ENABLED,
+    SHARPENING_AMOUNT,
 )
 
 
@@ -59,14 +61,32 @@ class Recognition:
                     "CUDA provider could not initialize for: " + ", ".join(cpu_models)
                 )
 
+    @staticmethod
+    def _preprocess_for_recognition(image):
+        """Apply direct 3x3 sharpening before passing an image to InsightFace."""
+        if not SHARPENING_ENABLED or SHARPENING_AMOUNT <= 0:
+            return image
+
+        amount = float(SHARPENING_AMOUNT)
+        kernel = np.array(
+            [
+                [0.0, -amount, 0.0],
+                [-amount, 1.0 + 4.0 * amount, -amount],
+                [0.0, -amount, 0.0],
+            ],
+            dtype=np.float32,
+        )
+        return cv2.filter2D(image, -1, kernel)
+
     # -------------------------
     # Load dataset
     # -------------------------
     def load_known_faces(self):
 
         folder = KNOWN_FACES_PATH
-        if not folder.is_dir():
-            raise FileNotFoundError(f"Known-faces directory does not exist: {folder}")
+        # A fresh install has no enrolled people yet. Create the private folder
+        # instead of failing at startup; unknown faces still work normally.
+        folder.mkdir(parents=True, exist_ok=True)
 
         embeddings = []
 
@@ -86,7 +106,7 @@ class Recognition:
                 if image is None:
                     continue
 
-                faces = self.app.get(image)
+                faces = self.app.get(self._preprocess_for_recognition(image))
 
                 if len(faces) == 0:
                     continue
@@ -113,7 +133,7 @@ class Recognition:
 
         results = []
 
-        faces = self.app.get(frame)
+        faces = self.app.get(self._preprocess_for_recognition(frame))
 
         for face in faces:
 
