@@ -32,6 +32,7 @@ def main() -> int:
 
     for relative_path in (
         "Install-FaceVision.ps1",
+        "Install-FaceVision.sh",
         "Start-FaceVision.ps1",
         "verify_install.py",
         "FaceVision/main.py",

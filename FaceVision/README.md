@@ -41,6 +41,10 @@ open the camera window or change installed packages:
 & "C:\path\to\FaceVision\FaceVision\setup_gpu.ps1" -Check
 ```
 
+On Ubuntu, install the desktop app with the root-level `Install-FaceVision.sh`.
+It creates an isolated Python environment and installs CPU ONNX Runtime by
+default; the installed launcher is `~/FaceVision/Run-FaceVision.sh`.
+
 ## Phone viewer from anywhere (free)
 
 FaceVision includes a lightweight viewer for the **final annotated OpenCV

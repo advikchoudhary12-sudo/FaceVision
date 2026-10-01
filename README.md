@@ -61,6 +61,21 @@ and network errors. See [the troubleshooting guide](docs/TROUBLESHOOTING.md).
 The launcher and GPU scripts can be run from any PowerShell folder. Add `-Check`
 to validate them without opening a camera window or changing packages.
 
+## Install on Ubuntu
+
+Run the Ubuntu installer from a checkout:
+
+```bash
+./Install-FaceVision.sh
+```
+
+It installs the required Ubuntu packages, downloads the project when run outside
+a checkout, creates a private Python virtual environment, and installs the CPU
+ONNX Runtime. It preserves existing `local_settings.py` and enrolled face
+images during updates. The installer opens the launcher when a desktop display
+is available; use `--no-launch` to install without opening it. Start the app
+later with `~/FaceVision/Run-FaceVision.sh`.
+
 ## Full project smoke test
 
 From any PowerShell folder, run:

@@ -15,6 +15,9 @@ checks the launcher and GPU scripts, compiles/imports the Python desktop code,
 and verifies a real MJPEG frame through the remote viewer without requiring a
 camera or private credentials.
 
+`Install-FaceVision.ps1` installs on Windows; `Install-FaceVision.sh` installs
+on Ubuntu with an isolated Python environment and CPU ONNX Runtime.
+
 ## Firmware path
 
 ```text
