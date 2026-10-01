@@ -22,6 +22,12 @@ from config import (
     REMOTE_VIEWER_JPEG_QUALITY,
     REMOTE_VIEWER_MAX_FPS,
     CAPTURE_STILL_ENABLED,
+    BLIND_STICK_PIN,
+    BLIND_STICK_POLL_INTERVAL_SECONDS,
+    BLYNK_SERVER,
+    BLIND_STICK_VOICE_DIRECTORY,
+    VOICE_FILES,
+    AUDIO_REPLAY_COOLDOWN_MS,
 )
 
 from core.camera import Camera
@@ -30,6 +36,8 @@ from core.overlay import Overlay
 from core.fps import FPSCounter
 from core.blynk import BlynkClient
 from core.remote_viewer import RemoteViewer
+from core.audio_narrator import AudioNarrator
+from BlindStick.blindstick_bridge import BlindStickBridge
 from launcher import run_launcher
 
 
@@ -41,6 +49,8 @@ def main():
     camera = None
     blynk = None
     remote_viewer = None
+    blind_stick_bridge = None
+    audio_narrator = None
     last_blynk_status = None
     try:
         camera_source = run_launcher()
@@ -56,6 +66,32 @@ def main():
         recognizer = Recognition()
         overlay = Overlay()
         fps = FPSCounter()
+        audio_narrator = AudioNarrator(
+            BLIND_STICK_VOICE_DIRECTORY,
+            VOICE_FILES,
+            AUDIO_REPLAY_COOLDOWN_MS,
+        )
+        if BLYNK_AUTH_TOKEN:
+            try:
+                blind_stick_bridge = BlindStickBridge(
+                    BLYNK_AUTH_TOKEN,
+                    BLIND_STICK_PIN,
+                    server=BLYNK_SERVER,
+                    poll_interval=BLIND_STICK_POLL_INTERVAL_SECONDS,
+                )
+                blind_stick_bridge.start()
+                print(
+                    f"[INFO] Listening for blind-stick Blynk {BLIND_STICK_PIN} "
+                    f"events every {BLIND_STICK_POLL_INTERVAL_SECONDS:g}s."
+                )
+            except (OSError, ValueError) as error:
+                blind_stick_bridge = None
+                print(f"[ERROR] Blind-stick Blynk listener unavailable: {error}")
+        else:
+            print(
+                "[INFO] Blind-stick integration disabled: set BLYNK_AUTH_TOKEN "
+                "in local_settings.py."
+            )
         frame_number = 0
         results = []
         process_every = max(1, PROCESS_EVERY_N_FRAMES)
@@ -101,10 +137,22 @@ def main():
                     break
                 continue
 
+            blind_stick_triggered = (
+                blind_stick_bridge.consume_trigger()
+                if blind_stick_bridge is not None
+                else False
+            )
+
             # Recognition is the expensive operation. Reuse the latest result
             # between inference frames to keep the UI responsive.
-            if frame_number % process_every == 0:
+            if blind_stick_triggered or frame_number % process_every == 0:
+                # Pass the camera frame at its native geometry. Recognition
+                # preprocessing sharpens in place without stretching it.
                 results = recognizer.process(frame)
+                if blind_stick_triggered:
+                    audio_narrator.enqueue_activation(
+                        face["name"] for face in results
+                    )
                 unknown_detections = (
                     unknown_detections + 1
                     if any(face["name"] == "Unknown" for face in results)
@@ -171,6 +219,10 @@ def main():
             blynk.close()
         if remote_viewer is not None:
             remote_viewer.stop()
+        if blind_stick_bridge is not None:
+            blind_stick_bridge.stop()
+        if audio_narrator is not None:
+            audio_narrator.close()
         cv2.destroyAllWindows()
 
     print("[INFO] FaceVision stopped.")

@@ -41,9 +41,25 @@ open the camera window or change installed packages:
 & "C:\path\to\FaceVision\FaceVision\setup_gpu.ps1" -Check
 ```
 
+On Windows, `Start-FaceVision.ps1` prefers the project-local
+`Faceinstaller test\Scripts\python.exe` environment when present; otherwise it
+uses Python 3.12. Pass `-PythonCommand` with a full `python.exe` path to select
+another environment. `Run.bat` delegates to the same launcher.
+
 On Ubuntu, install the desktop app with the root-level `Install-FaceVision.sh`.
 It creates an isolated Python environment and installs CPU ONNX Runtime by
 default; the installed launcher is `~/FaceVision/Run-FaceVision.sh`.
+
+The separate blind-stick ESP32-S3 signals Blynk V10. Add V10 to the Blynk
+device associated with the existing `BLYNK_AUTH_TOKEN`, use that same token in
+the stick's secrets header, and configure `BLIND_STICK_PIN` in
+`local_settings.py`. The computer listens for a rising value and performs one
+recognition on the existing camera frame. It plays a generic default prompt
+when no face is detected or when no identity-specific MP3 exists; add
+`<recognition-name>.mp3` prompts in `FaceVision/BlindStick/Voice/` to override
+that behavior. Playback uses the computer's default audio device, including
+Bluetooth headphones paired by the operating system.
+`AUDIO_REPLAY_COOLDOWN_MS` configures per-result replay suppression.
 
 ## Phone viewer from anywhere (free)
 

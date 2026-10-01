@@ -24,7 +24,11 @@ class Camera:
         self.last_error = None
 
         # Start capture thread
-        self.thread = threading.Thread(target=self.update, name="camera-capture")
+        self.thread = threading.Thread(
+            target=self.update,
+            name="camera-capture",
+            daemon=True,
+        )
         self.thread.start()
 
     def update(self):

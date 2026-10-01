@@ -63,7 +63,10 @@ class Recognition:
 
     @staticmethod
     def _preprocess_for_recognition(image):
-        """Apply direct 3x3 sharpening before passing an image to InsightFace."""
+        """Sharpen without changing the frame dimensions or aspect ratio."""
+        if not isinstance(image, np.ndarray) or image.ndim not in (2, 3):
+            raise ValueError("Recognition preprocessing requires a 2D or 3D image array.")
+        original_shape = image.shape
         if not SHARPENING_ENABLED or SHARPENING_AMOUNT <= 0:
             return image
 
@@ -76,7 +79,15 @@ class Recognition:
             ],
             dtype=np.float32,
         )
-        return cv2.filter2D(image, -1, kernel)
+        sharpened = cv2.filter2D(
+            image,
+            -1,
+            kernel,
+            borderType=cv2.BORDER_REFLECT_101,
+        )
+        if sharpened.shape != original_shape:
+            raise RuntimeError("Recognition preprocessing changed the frame dimensions.")
+        return sharpened
 
     # -------------------------
     # Load dataset

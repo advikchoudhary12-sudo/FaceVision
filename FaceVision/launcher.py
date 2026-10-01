@@ -30,6 +30,7 @@ def run_launcher():
     app.title(LAUNCHER_TITLE)
     app.geometry("620x520")
     app.resizable(False, False)
+    app.protocol("WM_DELETE_WINDOW", app.destroy)
 
     # ----------------------------
     # Title
@@ -125,8 +126,11 @@ def run_launcher():
     )
 
     entry.pack(pady=(8, 25))
+    entry.bind("<Return>", lambda _event: start())
 
-    status_var = ctk.StringVar(value="Choose a preset or enter a custom source.")
+    status_var = ctk.StringVar(
+        value="Choose a source, then press START or Enter. Press Escape to cancel."
+    )
     status_label = ctk.CTkLabel(
         app,
         textvariable=status_var,
@@ -173,6 +177,9 @@ def run_launcher():
 
     start_button.pack()
 
+    app.bind("<Escape>", lambda _event: app.destroy())
+    entry.focus_set()
+    entry.icursor("end")
     app.mainloop()
 
     return selected_camera["value"]

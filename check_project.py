@@ -43,7 +43,12 @@ def main() -> int:
         "FaceVision/core/recognition.py",
         "FaceVision/core/overlay.py",
         "FaceVision/core/remote_viewer.py",
+        "FaceVision/core/audio_narrator.py",
+        "FaceVision/BlindStick/blindstick_bridge.py",
+        "FaceVision/BlindStick/README.md",
         "ESP_32/ESP_32/ESP_32.ino",
+        "FaceVision/BlindStick/ESP32/BlindStick.ino",
+        "FaceVision/BlindStick/ESP32/blind_stick_secrets.example.h",
         "ESP_32/ESP_32/app_httpd.cpp",
         "ESP_32/ESP_32/wifi_secrets.example.h",
     ):
@@ -61,6 +66,8 @@ def main() -> int:
         "core.fps",
         "core.blynk",
         "core.remote_viewer",
+        "core.audio_narrator",
+        "BlindStick.blindstick_bridge",
     ):
         try:
             importlib.import_module(module_name)
@@ -70,12 +77,20 @@ def main() -> int:
 
     try:
         import config
+        import cv2
         from core.remote_viewer import RemoteViewer
+        from core.recognition import Recognition
         import numpy as np
 
         check(config.BASE_DIR == APP, "Configuration resolves the FaceVision folder from its own file")
         check(config.KNOWN_FACES_PATH.is_dir(), "Known-faces folder exists or was created")
         check(isinstance(config.REMOTE_VIEWER_PORT, int), "Remote viewer port is a number")
+        sample = np.zeros((80, 120, 3), dtype=np.uint8)
+        sharpened = Recognition._preprocess_for_recognition(sample)
+        check(
+            sharpened.shape == sample.shape and sharpened.dtype == sample.dtype,
+            "Recognition preprocessing preserves frame dimensions and format",
+        )
 
         viewer = RemoteViewer(host="127.0.0.1", port=0, max_fps=30)
         port = viewer.start()

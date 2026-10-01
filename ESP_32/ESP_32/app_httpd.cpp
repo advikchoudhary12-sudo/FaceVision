@@ -156,7 +156,7 @@ static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_
 
 // Lower values produce higher quality in frame2jpg. 30 is a better
 // performance/detail balance for real-time face detection.
-#define STREAM_SOFTWARE_JPEG_QUALITY 45
+#define STREAM_SOFTWARE_JPEG_QUALITY 75
 
 static esp_err_t capture_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;

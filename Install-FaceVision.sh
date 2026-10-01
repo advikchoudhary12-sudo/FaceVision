@@ -140,7 +140,7 @@ if [[ "$SKIP_DEPENDENCIES" != true ]]; then
             "$python_env/bin/python" -m pip uninstall -y "$package"
         fi
     done
-    "$python_env/bin/python" -m pip install insightface numpy onnxruntime opencv-python customtkinter
+    "$python_env/bin/python" -m pip install insightface numpy onnxruntime opencv-python customtkinter pygame
 else
     [[ -x "$python_env/bin/python" ]] || fail "No existing virtual environment found at $python_env."
 fi

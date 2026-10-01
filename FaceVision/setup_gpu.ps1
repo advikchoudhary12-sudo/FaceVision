@@ -79,7 +79,7 @@ if ($Check) {
 
 else {
 try {
-    Invoke-Python -Arguments @('-m', 'pip', 'install', '--upgrade', 'pip', 'insightface', 'numpy', 'opencv-python', 'customtkinter')
+    Invoke-Python -Arguments @('-m', 'pip', 'install', '--upgrade', 'pip', 'insightface', 'numpy', 'opencv-python', 'customtkinter', 'pygame')
     Invoke-Python -Arguments @('-m', 'pip', 'uninstall', '-y', 'onnxruntime', 'onnxruntime-gpu')
 
     if (-not $ForceCpu -and $null -ne $cudaVersion -and $cudaVersion.Major -ge 13) {

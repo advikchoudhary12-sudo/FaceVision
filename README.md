@@ -76,6 +76,25 @@ images during updates. The installer opens the launcher when a desktop display
 is available; use `--no-launch` to install without opening it. Start the app
 later with `~/FaceVision/Run-FaceVision.sh`.
 
+## Blind-stick recognition and audio
+
+The separate ESP32-S3 blind-stick controller is in
+[`FaceVision/BlindStick/ESP32/BlindStick.ino`](FaceVision/BlindStick/ESP32/BlindStick.ino).
+Configure its sensor pins and Wi-Fi, and set the existing FaceVision
+`BLYNK_AUTH_TOKEN` in the stick's secrets header. Add
+V10 to the Blynk device/template used by that token. FaceVision reuses its
+existing token to listen for V10 value transitions (default pin `V10`); no
+additional Blynk token setting is needed. The stick resets the pin after the
+obstacle has cleared and the cooldown has expired.
+
+Pair the Bluetooth headphones with the PC through its operating system and set
+them as the default audio output. Put prompts named exactly after the
+recognition labels (for example, `FaceVision/BlindStick/Voice/Ayan.mp3`) in
+`FaceVision/BlindStick/Voice/`. The optional `unknown.mp3` prompt is used for
+unrecognized faces, and no audio plays when a frame contains no faces.
+`AUDIO_REPLAY_COOLDOWN_MS` in `local_settings.py` controls how long the same
+identity is suppressed after playback starts; it defaults to 5000 ms.
+
 ## Full project smoke test
 
 From any PowerShell folder, run:
