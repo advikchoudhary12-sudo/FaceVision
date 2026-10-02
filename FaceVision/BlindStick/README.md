@@ -28,10 +28,14 @@ cannot issue repeated triggers.
 
 ## Configure voice prompts
 
-Put the MP3 files you provide in `Voice/`, named for the recognition label, for
-example `Voice/Ayan.mp3` and `Voice/unknown.mp3`. FaceVision uses the computer's
-default audio device; pair headphones through the operating system and select
-them as the default output.
+Put the MP3 files you provide in `Voice/`, named exactly for the recognition
+label, for example `Voice/Advik.mp3` for a person enrolled in
+`data/known_faces/Advik/`, and `Voice/unknown.mp3` for an unknown face. FaceVision
+resolves identity prompts dynamically, so adding a person folder and the matching
+MP3 does not require a code or settings change. If that identity's MP3 is absent,
+the configured default prompt is used. FaceVision uses the computer's default
+audio device; pair headphones through the operating system and select them as
+the default output.
 
 `VOICE_FILES` in `FaceVision/local_settings.py` can override the default
 `<identity>.mp3` names. Mapping paths are relative to `Voice/`, for example:

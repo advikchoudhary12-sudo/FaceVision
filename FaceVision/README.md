@@ -47,8 +47,10 @@ uses Python 3.12. Pass `-PythonCommand` with a full `python.exe` path to select
 another environment. `Run.bat` delegates to the same launcher.
 
 On Ubuntu, install the desktop app with the root-level `Install-FaceVision.sh`.
-It creates an isolated Python environment and installs CPU ONNX Runtime by
-default; the installed launcher is `~/FaceVision/Run-FaceVision.sh`.
+It installs Python 3.12 (enabling the deadsnakes PPA if the Ubuntu repositories
+do not provide it), creates an isolated Python environment, and installs CPU
+ONNX Runtime by default. The installed launcher is
+`~/FaceVision/Run-FaceVision.sh`.
 
 The separate blind-stick ESP32-S3 signals Blynk V10. Add V10 to the Blynk
 device associated with the existing `BLYNK_AUTH_TOKEN`, use that same token in

@@ -41,6 +41,13 @@ class AudioNarrator:
     def _voice_path(self, name: str) -> Path:
         filename = self.voice_files.get(name)
         if filename is None:
+            identity_path = (self.voice_directory / f"{name}.mp3").resolve()
+            if not identity_path.is_relative_to(self.voice_directory):
+                raise ValueError(
+                    f"Voice file for {name!r} must be inside the Voice directory."
+                )
+            if identity_path.is_file():
+                return identity_path
             filename = self.voice_files.get("default", f"{name}.mp3")
         if not isinstance(filename, str) or not filename:
             raise ValueError(f"Invalid voice-file mapping for {name!r}.")

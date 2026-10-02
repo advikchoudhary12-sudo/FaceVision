@@ -27,6 +27,7 @@ class AudioNarratorTests(unittest.TestCase):
     def test_default_voice_is_used_when_identity_prompt_is_missing(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir).resolve()
+            (root / "Advik.mp3").touch()
             narrator = AudioNarrator(
                 root,
                 {"default": "activation.mp3"},
@@ -35,11 +36,28 @@ class AudioNarratorTests(unittest.TestCase):
             try:
                 self.assertEqual(
                     narrator._voice_path("Advik"),
+                    root / "Advik.mp3",
+                )
+                self.assertEqual(
+                    narrator._voice_path("Mayank"),
                     root / "activation.mp3",
                 )
                 self.assertEqual(
                     narrator._voice_path("default"),
                     root / "activation.mp3",
+                )
+            finally:
+                narrator.close()
+
+    def test_identity_voice_file_is_resolved_without_a_static_mapping(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir).resolve()
+            (root / "New Person.mp3").touch()
+            narrator = AudioNarrator(root, {}, replay_cooldown_ms=5000)
+            try:
+                self.assertEqual(
+                    narrator._voice_path("New Person"),
+                    root / "New Person.mp3",
                 )
             finally:
                 narrator.close()

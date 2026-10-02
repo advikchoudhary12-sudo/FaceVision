@@ -69,12 +69,13 @@ Run the Ubuntu installer from a checkout:
 ./Install-FaceVision.sh
 ```
 
-It installs the required Ubuntu packages, downloads the project when run outside
-a checkout, creates a private Python virtual environment, and installs the CPU
-ONNX Runtime. It preserves existing `local_settings.py` and enrolled face
-images during updates. The installer opens the launcher when a desktop display
-is available; use `--no-launch` to install without opening it. Start the app
-later with `~/FaceVision/Run-FaceVision.sh`.
+It installs Python 3.12 and the required Ubuntu packages, downloads the project
+when run outside a checkout, creates a private Python virtual environment, and
+installs the CPU ONNX Runtime. If the configured Ubuntu repositories do not
+provide Python 3.12, it enables the deadsnakes PPA. It preserves existing
+`local_settings.py` and enrolled face images during updates. The installer opens
+the launcher when a desktop display is available; use `--no-launch` to install
+without opening it. Start the app later with `~/FaceVision/Run-FaceVision.sh`.
 
 ## Blind-stick recognition and audio
 

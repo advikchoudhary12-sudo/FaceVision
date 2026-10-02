@@ -11,7 +11,7 @@ usage() {
     cat <<'EOF'
 Usage: Install-FaceVision.sh [options]
 
-Install FaceVision on Ubuntu using an isolated Python virtual environment.
+Install FaceVision on Ubuntu using Python 3.12 and an isolated virtual environment.
 
 Options:
   --install-dir PATH             Install location (default: ~/FaceVision)
@@ -64,12 +64,20 @@ command -v apt-get >/dev/null 2>&1 || fail "apt-get was not found; install this 
 
 if [[ "$SKIP_SYSTEM_DEPENDENCIES" != true ]]; then
     apt_command=(apt-get)
+    repository_command=(add-apt-repository)
     if ((EUID != 0)); then
         command -v sudo >/dev/null 2>&1 || fail "Install system packages as root or install sudo, then rerun."
         apt_command=(sudo apt-get)
+        repository_command=(sudo add-apt-repository)
     fi
     printf 'Installing Ubuntu packages required by Python, OpenCV, and the desktop UI...\n'
     "${apt_command[@]}" update
+    if ! apt-cache policy python3.12 | grep -qE 'Candidate: [0-9]'; then
+        printf 'Python 3.12 is not available in the configured Ubuntu repositories; enabling the deadsnakes PPA...\n'
+        "${apt_command[@]}" install -y software-properties-common
+        "${repository_command[@]}" --yes ppa:deadsnakes/ppa
+        "${apt_command[@]}" update
+    fi
     "${apt_command[@]}" install -y \
         ca-certificates \
         build-essential \
@@ -80,15 +88,16 @@ if [[ "$SKIP_SYSTEM_DEPENDENCIES" != true ]]; then
         libsm6 \
         libxext6 \
         libxrender1 \
-        python3 \
-        python3-dev \
-        python3-tk \
-        python3-venv
+        python3.12 \
+        python3.12-dev \
+        python3.12-tk \
+        python3.12-venv
 fi
 
-command -v python3 >/dev/null 2>&1 || fail "python3 is required. Install it with: sudo apt-get install python3"
-python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' ||
-    fail "Python 3.10 or newer is required; install a supported Ubuntu Python and rerun."
+command -v python3.12 >/dev/null 2>&1 ||
+    fail "Python 3.12 is required. Run this installer without --skip-system-dependencies or install python3.12 and python3.12-venv."
+python3.12 -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 12) else 1)' ||
+    fail "Python 3.12 is required; install it and rerun this installer."
 
 TEMP_DIR="$(mktemp -d)"
 cleanup() {
@@ -133,7 +142,7 @@ fi
 python_env="$INSTALL_DIR/.venv"
 if [[ "$SKIP_DEPENDENCIES" != true ]]; then
     printf 'Creating/updating the FaceVision Python environment...\n'
-    python3 -m venv "$python_env"
+    python3.12 -m venv "$python_env"
     "$python_env/bin/python" -m pip install --upgrade pip
     for package in onnxruntime onnxruntime-gpu; do
         if "$python_env/bin/python" -m pip show "$package" >/dev/null 2>&1; then
